@@ -12,6 +12,7 @@
 // Data wire is plugged into DIGITAL PIN on the Arduino
 #define ONE_WIRE_BUS 2
 float tempC;
+const int group_id = 0;
 
 
 // setup instances
@@ -56,9 +57,10 @@ void loop(void)
 
   Serial.print(getISOtime());
   Serial.print(", ");
+  Serial.print(twodigits(group_id));
+  Serial.print(", ");
   Serial.print(tempC);
-  Serial.print("°C");
-  
+    
   Serial.println("");
 
   digitalWrite(LED_BUILTIN, LOW); 
