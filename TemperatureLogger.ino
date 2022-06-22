@@ -72,15 +72,12 @@ void loop(void)
   Serial.println("");
 
   File myFile = SD.open(logfile, FILE_WRITE);
-  if (myFile) {
-    myFile.print(getISOtime());
-    myFile.print(", ");
-    myFile.print(twodigits(group_id));
-    myFile.print(", ");
-    myFile.print(tempC);
-    myFile.println("");
-    myFile.close();
-  }
+  write2SD(getISOtime());
+  write2SD(", ");
+  write2SD(twodigits(group_id));
+  write2SD(", ");
+  write2SD(String(tempC));
+  writeln2SD("");
 
   digitalWrite(LED_BUILTIN, LOW); 
 
@@ -130,5 +127,28 @@ String getISOtime() {
   ISO8601_time +=  "Z";
 
   return ISO8601_time;
+}
+/*****************************************/
+
+
+/******************************************
+Helper functions to write to SD card
+******************************************/
+void write2SD(String dataString) {
+  File myFile = SD.open(logfile, FILE_WRITE);
+  if (myFile) {
+    myFile.print(dataString);
+    myFile.close();
+  };
+  Serial.print(dataString);
+}
+
+void writeln2SD(String dataString) {
+  File myFile = SD.open(logfile, FILE_WRITE);
+  if (myFile) {
+    myFile.println(dataString);
+    myFile.close();
+  };
+  Serial.println(dataString);
 }
 /*****************************************/
