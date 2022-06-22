@@ -7,10 +7,12 @@
 #include <RTClib.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <SD.h>
 
 
 // Data wire is plugged into DIGITAL PIN on the Arduino
 #define ONE_WIRE_BUS 2
+const String logfile = "temperature.log";
 float tempC;
 const int group_id = 0;
 
@@ -37,10 +39,17 @@ void setup(void)
   // automatically set the RTC to the date & time on PC this sketch was compiled
   rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
+  // Initialize the SD card module (connects internally to pin 10)
+  if (!SD.begin(10)) {
+    Serial.println("# SD card failed, or not present");
+    return;     // don't do anything more:
+  } else {
+    Serial.println("# SD card initialized");
+  }
 
   // Locate sensors on the bus
   static int deviceCount;
-  Serial.print("Locating devices on pin ");
+  Serial.print("# Locating devices on pin ");
   Serial.print(ONE_WIRE_BUS);
   Serial.println("");
 }
@@ -60,8 +69,18 @@ void loop(void)
   Serial.print(twodigits(group_id));
   Serial.print(", ");
   Serial.print(tempC);
-    
   Serial.println("");
+
+  File myFile = SD.open(logfile, FILE_WRITE);
+  if (myFile) {
+    myFile.print(getISOtime());
+    myFile.print(", ");
+    myFile.print(twodigits(group_id));
+    myFile.print(", ");
+    myFile.print(tempC);
+    myFile.println("");
+    myFile.close();
+  }
 
   digitalWrite(LED_BUILTIN, LOW); 
 
