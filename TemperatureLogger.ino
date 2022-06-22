@@ -28,7 +28,52 @@ void setup(void)
 
 void loop(void)
 { 
-  DateTime now = rtc.now();
-  Serial.println(now.second());
+  Serial.println(getISOtime());
   delay(1000);
 }
+
+
+/******************************************
+Helper function to format datetime elements 
+as two digit (leading zeros) string
+
+Parameters: Integer value
+Returns: String repr. of two digit number
+******************************************/
+String twodigits(int x) {
+    String output = "";
+    if (x < 10) {
+        output += "0";
+        output += x;
+    } else {
+        output = x;
+    }
+    return output;
+}
+/*****************************************/
+
+
+/******************************************
+Helper function to generate timestamp in
+ISO8601 format.
+******************************************/
+String getISOtime() {
+  DateTime now = rtc.now();
+  String ISO8601_time = "";
+
+  ISO8601_time +=  now.year();
+  ISO8601_time +=  "-";
+  ISO8601_time +=  twodigits(now.month());
+  ISO8601_time +=  "-";
+  ISO8601_time +=  twodigits(now.day());
+  ISO8601_time +=  "T";
+  ISO8601_time +=  twodigits(now.hour());
+  ISO8601_time +=  ":";
+  ISO8601_time +=  twodigits(now.minute());
+  ISO8601_time +=  ":";
+  ISO8601_time +=  twodigits(now.second());
+  ISO8601_time +=  "Z";
+
+  return ISO8601_time;
+}
+/*****************************************/
