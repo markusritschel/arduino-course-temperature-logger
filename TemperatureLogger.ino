@@ -15,6 +15,7 @@
 const String logfile = "temperature.log";
 float tempC;
 const int group_id = 0;
+const int numSamples = 20;
 
 
 // setup instances
@@ -61,6 +62,22 @@ void loop(void)
 { 
   digitalWrite(LED_BUILTIN, HIGH);
 
+  // Average measurement:
+  float tempAvg = 0;
+
+  for (int i=0; i<numSamples; i++)
+  {
+    // Send command to all the sensors for temperature conversion
+    sensors.requestTemperatures(); 
+    // Read temperature data from sensor 
+    tempC = sensors.getTempCByIndex(0);
+    tempAvg += tempC;
+    delay(200);   // Consider adjustment time of the sensor
+  }
+  // Divide by number of samples to get average value
+  tempAvg /= numSamples;
+
+  // Spot measurement:
   // Send command to all the sensors for temperature conversion
   sensors.requestTemperatures(); 
 
