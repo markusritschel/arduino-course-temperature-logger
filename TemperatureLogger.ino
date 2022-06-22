@@ -52,6 +52,9 @@ void setup(void)
   Serial.print("# Locating devices on pin ");
   Serial.print(ONE_WIRE_BUS);
   Serial.println("");
+
+  // NOTE: When writing to SD, comment out non-data strings with `#`
+  writeln2SD("# timestamp, group_id, temperature (spot)");
 }
 
 void loop(void)
@@ -64,14 +67,6 @@ void loop(void)
   // Read temperature data from sensor 
   tempC = sensors.getTempCByIndex(0);
 
-  Serial.print(getISOtime());
-  Serial.print(", ");
-  Serial.print(twodigits(group_id));
-  Serial.print(", ");
-  Serial.print(tempC);
-  Serial.println("");
-
-  File myFile = SD.open(logfile, FILE_WRITE);
   write2SD(getISOtime());
   write2SD(", ");
   write2SD(twodigits(group_id));
