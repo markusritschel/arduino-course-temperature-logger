@@ -5,10 +5,19 @@
  * ************************************************************/
 // Load required libraries
 #include <RTClib.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+
+// Data wire is plugged into DIGITAL PIN on the Arduino
+#define ONE_WIRE_BUS 2
+float tempC;
 
 
 // setup instances
 RTC_DS1307 rtc;                  // Setup RTC instance and make available as `rtc`
+OneWire oneWire(ONE_WIRE_BUS);        // Setup a oneWire instance to communicate with any OneWire device
+DallasTemperature sensors(&oneWire);  // Pass oneWire reference to DallasTemperature library
 
 
 void setup(void)
@@ -24,11 +33,30 @@ void setup(void)
 
   // automatically set the RTC to the date & time on PC this sketch was compiled
   rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+
+
+  // Locate sensors on the bus
+  static int deviceCount;
+  Serial.print("Locating devices on pin ");
+  Serial.print(ONE_WIRE_BUS);
+  Serial.println("");
 }
 
 void loop(void)
 { 
-  Serial.println(getISOtime());
+  // Send command to all the sensors for temperature conversion
+  sensors.requestTemperatures(); 
+
+  // Read temperature data from sensor 
+  tempC = sensors.getTempCByIndex(0);
+
+  Serial.print(getISOtime());
+  Serial.print(", ");
+  Serial.print(tempC);
+  Serial.print("°C");
+  
+  Serial.println("");
+
   delay(1000);
 }
 
