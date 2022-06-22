@@ -22,6 +22,8 @@ DallasTemperature sensors(&oneWire);  // Pass oneWire reference to DallasTempera
 
 void setup(void)
 {
+  pinMode(LED_BUILTIN, OUTPUT);
+
   Serial.begin(9600);   // Start Serial communication
 
   // Initialize RTC
@@ -44,6 +46,8 @@ void setup(void)
 
 void loop(void)
 { 
+  digitalWrite(LED_BUILTIN, HIGH);
+
   // Send command to all the sensors for temperature conversion
   sensors.requestTemperatures(); 
 
@@ -56,6 +60,8 @@ void loop(void)
   Serial.print("°C");
   
   Serial.println("");
+
+  digitalWrite(LED_BUILTIN, LOW); 
 
   delay(1000);
 }
