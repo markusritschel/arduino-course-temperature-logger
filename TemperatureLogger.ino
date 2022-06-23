@@ -10,16 +10,17 @@
 #include <SD.h>
 
 
-// Data wire is plugged into DIGITAL PIN on the Arduino
-#define ONE_WIRE_BUS 2
-const String logfile = "temperature.log";
-float tempC;
-const int group_id = 0;
-const int numSamples = 20;
+// Define variables and constants
+#define ONE_WIRE_BUS 2                    // Data wire is plugged into DIGITAL PIN on the Arduino
+const String logfile = "temperature.log"; // Name of the log file on the SD card
+const int group_id = 1;                   // Your group ID to identify your logger
+unsigned long currentMillis;
+unsigned long lastMillis;
+const unsigned long measurementInterval = 20*1000; // Measurement interval in milliseconds
 
 
 // setup instances
-RTC_DS1307 rtc;                  // Setup RTC instance and make available as `rtc`
+RTC_DS1307 rtc;                       // Setup RTC instance and make available as `rtc`
 OneWire oneWire(ONE_WIRE_BUS);        // Setup a oneWire instance to communicate with any OneWire device
 DallasTemperature sensors(&oneWire);  // Pass oneWire reference to DallasTemperature library
 
@@ -55,45 +56,70 @@ void setup(void)
   Serial.println("");
 
   // NOTE: When writing to SD, comment out non-data strings with `#`
-  writeln2SD("# timestamp, group_id, temperature (spot)");
+  write2SD("# Sampling rate: ");
+  write2SD(String(measurementInterval/1000));
+  writeln2SD(" seconds");
+  writeln2SD("# timestamp, group_id, temperature (spot), temperature (average)");
+
+  lastMillis = millis();
 }
 
 void loop(void)
 { 
-  digitalWrite(LED_BUILTIN, HIGH);
+  static unsigned long deltaMillis;
+  static int sampleIndex = 0;
+  static float tempC;
+  static float tempAvg = 0;
+  static float tempSpot = 0;
 
-  // Average measurement:
-  float tempAvg = 0;
-
-  for (int i=0; i<numSamples; i++)
-  {
-    // Send command to all the sensors for temperature conversion
-    sensors.requestTemperatures(); 
-    // Read temperature data from sensor 
-    tempC = sensors.getTempCByIndex(0);
-    tempAvg += tempC;
-    delay(200);   // Consider adjustment time of the sensor
-  }
-  // Divide by number of samples to get average value
-  tempAvg /= numSamples;
-
-  // Spot measurement:
   // Send command to all the sensors for temperature conversion
   sensors.requestTemperatures(); 
-
   // Read temperature data from sensor 
   tempC = sensors.getTempCByIndex(0);
+  tempAvg += tempC;
+  sampleIndex += 1;
 
-  write2SD(getISOtime());
-  write2SD(", ");
-  write2SD(twodigits(group_id));
-  write2SD(", ");
-  write2SD(String(tempC));
-  writeln2SD("");
+  currentMillis = millis();
+  deltaMillis = currentMillis-lastMillis;
 
-  digitalWrite(LED_BUILTIN, LOW); 
+  // If interval has passed, write output
+  if (deltaMillis >= (measurementInterval-200))
+  {
+    // Measurement done
+    digitalWrite(LED_BUILTIN, HIGH);
+    // Divide by number of samples to get average value
+    tempAvg /= sampleIndex;
+    Serial.print("# [DEBUG] Average measurement over ");
+    Serial.print(sampleIndex);
+    Serial.println(" samples");
 
-  delay(1000);
+    // # timestamp, sensor_id (2 digits), T in °C (2 digits; spot), T in °C (2 digits; avg)
+    write2SD(getISOtime());
+    write2SD(", ");
+    write2SD(twodigits(group_id));
+    write2SD(", ");
+    write2SD(String(tempSpot));
+    write2SD(", ");
+    write2SD(String(tempAvg));
+    writeln2SD("");
+
+    // Reset variables
+    tempAvg = 0;
+    tempSpot = 0;
+    sampleIndex = 0;
+    lastMillis = currentMillis;
+
+    digitalWrite(LED_BUILTIN, LOW);
+  } else
+  // Set spot measurement if about half the time has elapsed (i.e. by around 750ms)
+  if ((deltaMillis > measurementInterval/3) and (deltaMillis%(measurementInterval/2) <= 750))
+  {
+    tempSpot = tempC;
+    Serial.print("# [DEBUG] Spot measurement @ ");
+    Serial.println(getISOtime());
+  }
+
+  delay(200);
 }
 
 
