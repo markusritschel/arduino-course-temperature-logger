@@ -39,7 +39,8 @@ void setup(void)
   }
 
   // automatically set the RTC to the date & time on PC this sketch was compiled
-  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)) - TimeSpan(0,1,59,50));   // adjust clock via local time to UTC
+  Serial.println(F("RTC adjusted to UTC time!"));
 
   // Initialize the SD card module (connects internally to pin 10)
   if (!SD.begin(10)) {
